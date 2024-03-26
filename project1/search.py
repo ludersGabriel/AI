@@ -96,6 +96,8 @@ def depthFirstSearch(problem: SearchProblem):
     Start's successors: [((5, 4), 'South', 1), ((4, 5), 'West', 1)]
 
     """
+
+    # dfs uses a stack to keep track of frontier
     stack = util.Stack()
     parents = {}
     actions = []
@@ -128,6 +130,7 @@ def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
 
+    # bfs uses a queue to keep track of frontier
     queue = util.Queue()
     parents = {}
     actions = []
@@ -158,7 +161,38 @@ def breadthFirstSearch(problem: SearchProblem):
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # here we are mixing the benefits of bfs and dfs
+    # we are using a priority queue to keep track of the frontier
+    pq = util.PriorityQueue()
+    visited = set()
+
+    pq.push((problem.getStartState(), list()), 0)
+
+    while (not pq.isEmpty()):
+        state, path = pq.pop()
+        visited.add(state)
+
+        if (problem.isGoalState(state)):
+            return path
+
+        for successor in problem.getSuccessors(state):
+            if successor[0] not in visited:
+                inFrontier = False
+                for element in pq.heap:
+                    if element[2][0] == successor[0]:
+                        inFrontier = True
+                        break
+
+                newPath = path + [successor[1]]
+                newCost = problem.getCostOfActions(newPath)
+
+                if not inFrontier:
+                    pq.push((successor[0], newPath), newCost)
+                elif problem.getCostOfActions(element[2][1]) > newCost:
+                    pq.update((successor[0], newPath), newCost)
+
+    return None
 
 
 def nullHeuristic(state, problem=None):
@@ -172,7 +206,39 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # A* is a combination of UCS and heuristic
+    pq = util.PriorityQueue()
+    visited = set()
+
+    pq.push((problem.getStartState(), list()),
+            heuristic(problem.getStartState(), problem))
+
+    while not pq.isEmpty():
+        state, path = pq.pop()
+        visited.add(state)
+
+        if problem.isGoalState(state):
+            return path
+
+        for successor in problem.getSuccessors(state):
+            if successor[0] not in visited:
+                inFrontier = False
+                for element in pq.heap:
+                    if element[2][0] == successor[0]:
+                        inFrontier = True
+                        break
+
+                hCost = heuristic(successor[0], problem)
+                newPath = path + [successor[1]]
+                newCost = problem.getCostOfActions(newPath)
+
+                if not inFrontier:
+                    pq.push((successor[0], newPath), newCost + hCost)
+                elif problem.getCostOfActions(element[2][1]) > newCost:
+                    pq.update((successor[0], newPath), newCost + hCost)
+
+    return None
 
 
 # Abbreviations
